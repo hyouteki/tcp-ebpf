@@ -18,15 +18,11 @@
  * Use "bpftool cgroup attach $cg sock_ops $prog" to load this BPF program.
  */
 
-#include <linux/bpf.h>
-#include <linux/socket.h>
-#include <linux/types.h>
+#include "vmlinux.h"
 #include <bpf/bpf_helpers.h>
-#include <netinet/tcp.h> 
-#include <arpa/inet.h>
-// #include "vmlinux.h"
 
 #define DEBUG 1
+#define SOL_TCP 6 // from <netinet/tcp.h>
 
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
@@ -48,7 +44,7 @@ int bpf_iw(struct bpf_sock_ops *skops) {
 	if (op != 4 && op != 5) return 0;
 
 #ifdef DEBUG
-	bpf_printk("Opcode: %d\n", op);
+	bpf_printk("Opcode(%d)", op);
 #endif
 
 	switch (op) {
@@ -58,18 +54,18 @@ int bpf_iw(struct bpf_sock_ops *skops) {
 		if (!user_wnd) {
 			// if key not present in the map
 			ret = bpf_map_update_elem(&wnd_map, &key, &val, BPF_NOEXIST);
-			if (!ret) bpf_printk("Log: Screw BPF. ReturnVal(%d)", ret);
+			if (!ret) bpf_printk("Log: no map hit", ret);
 		}  else {
 			// userspace has defined cwnd in map
 			if (!*user_wnd) return 0;
 			ret = bpf_setsockopt(skops, SOL_TCP, TCP_BPF_IW, user_wnd, sizeof(int));
-			if (!ret) bpf_printk("Error: Socket cwnd not set. SockErr(%d)", ret);
-			bpf_printk("InitCwnd(%d), IP(%pI4)", *user_wnd, &addr.s_addr);
+			if (!ret) bpf_printk("Error(%d): Socket cwnd not set", ret);
+			bpf_printk("Log: InitCwnd(%d), IP(%pI4)", *user_wnd, &addr.s_addr);
 		}
 		break;
 	}
 #ifdef DEBUG
-	bpf_printk("ReturnVal(%d)\n", ret);
+	bpf_printk("ReturnVal(%d)", ret);
 #endif
 	skops->reply = ret;
 	return 1;

@@ -1,9 +1,18 @@
 default: build
 
-build: kernel-cwnd.bpf.c clean
+BPF_PROG = kernel-cwnd.bpf.c
+BUILD_NAME = bpfiw
+
+build: $(BPF_PROG) vmlinux.h clean
+	clang \
+		-target bpf \
+		-D __TARGET_ARCH_$(ARCH) \
+		-I/usr/include/$(shell uname -m)-linux-gnu \
+		-g -O2 -c $(BPF_PROG) -o ./build/$(BUILD_NAME).o
+	llvm-strip -g ./build/$(BUILD_NAME).o
+
+vmlinux.h:
 	sudo bpftool btf dump file /sys/kernel/btf/vmlinux format c > ./vmlinux.h
-	clang -O2 -g -Wall -emit-llvm -c kernel-cwnd.bpf.c -o haha.bc
-	llc -march=bpf -mcpu=probe -filetype=obj haha.bc -o haha.o
 
 load:
 	sudo bash ./load.sh
@@ -18,4 +27,4 @@ show:
 	sudo bpftool prog show name bpf_iw --pretty
 
 clean: 
-	rm -rf haha.o haha.bc
+	rm -rf ./build/*
