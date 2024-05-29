@@ -33,11 +33,16 @@ struct {
 
 SEC("sockops")
 int bpf_iw(struct bpf_sock_ops *skops) {
-	int ret = 0; // return value 
 	struct in_addr addr;
-	int key = 0, val = 0, op, *user_wnd;
-
 	addr.s_addr = skops->remote_ip4;
+
+	/*
+	 * key: for client identification (currently the only value for key is zero)
+	 * TODO: modify key to be a combination of client id & connection id  
+	 * val: cwnd for that client (previously stored by the user space code)
+	 * ret: return value
+	 */
+	int key = 0, val = 0, ret = 0, op, *user_wnd;
 
 	op = (int) skops->op;
 	// if op neither active nor passive TCP connection; skip
@@ -54,19 +59,22 @@ int bpf_iw(struct bpf_sock_ops *skops) {
 		if (!user_wnd) {
 			// if key not present in the map
 			ret = bpf_map_update_elem(&wnd_map, &key, &val, BPF_NOEXIST);
-			if (!ret) bpf_printk("Log: no map hit", ret);
+			if (!ret) bpf_printk("Log: Screw eBPF");
 		}  else {
-			// userspace has defined cwnd in map
+			// user space code has defined cwnd in eBPF map
 			if (!*user_wnd) return 0;
+			// setting the initial congestion window to be same as `*user_wnd`
 			ret = bpf_setsockopt(skops, SOL_TCP, TCP_BPF_IW, user_wnd, sizeof(int));
 			if (!ret) bpf_printk("Error(%d): Socket cwnd not set", ret);
 			bpf_printk("Log: InitCwnd(%d), IP(%pI4)", *user_wnd, &addr.s_addr);
 		}
 		break;
 	}
+
 #ifdef DEBUG
 	bpf_printk("ReturnVal(%d)", ret);
 #endif
+
 	skops->reply = ret;
 	return 1;
 }
