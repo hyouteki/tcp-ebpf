@@ -10,3 +10,7 @@ An eBPF program to modify the congestion window stored in an eBPF map by user sp
 - `make unload`: for detaching the hooks and unloading the program.
 > [!Important]
 > Unloading the program is crucial; otherwise, the program and map will remain persistent until the system restarts.
+
+## Dependency
+- [libbpf-dev](https://packages.ubuntu.com/search?keywords=libbpf-dev)
+- [bpftool](https://github.com/libbpf/bpftool)
