@@ -4,6 +4,7 @@ BPF_PROG = kernel-cwnd.bpf.c
 BUILD_NAME = bpfiw
 
 build: $(BPF_PROG) vmlinux.h clean
+	mkdir -p build
 	clang \
 		-target bpf \
 		-D __TARGET_ARCH_$(ARCH) \
