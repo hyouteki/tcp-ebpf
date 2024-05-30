@@ -22,7 +22,11 @@
 #include <bpf/bpf_helpers.h>
 
 #define DEBUG 1
-#define SOL_TCP 6 // from <netinet/tcp.h>
+/*
+ * Socket Operation Level TCP
+ * from <netinet/tcp.h>
+ */
+#define SOL_TCP 6 
 
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
@@ -34,12 +38,14 @@ struct {
 SEC("sockops")
 int bpf_iw(struct bpf_sock_ops *skops) {
 	struct in_addr addr;
+	// storing dest IPv4 for logging
 	addr.s_addr = skops->remote_ip4;
 
 	/*
 	 * key: for client identification (currently the only value for key is zero)
-	 * TODO: modify key to be a combination of client id & connection id  
-	 * val: cwnd for that client (previously stored by the user space code)
+	 * TODO: modify key to be a combination of client id & QUIC connection id  
+	 * op: socket operation type
+	 * *user_wnd: cwnd for that client (previously stored by the user space code)
 	 * ret: return value
 	 */
 	int key = 0, val = 0, ret = 0, op, *user_wnd;
@@ -75,6 +81,7 @@ int bpf_iw(struct bpf_sock_ops *skops) {
 	bpf_printk("ReturnVal(%d)", ret);
 #endif
 
+	// passing the return value back to the kernel
 	skops->reply = ret;
 	return 1;
 }

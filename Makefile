@@ -21,6 +21,12 @@ load:
 trace:
 	sudo cat /sys/kernel/debug/tracing/trace_pipe
 
+client:
+	sudo bpftool map update name wnd_map key hex 00 00 00 00 value hex 07 00 00 00
+
+mapdump:
+	sudo bpftool map dump name wnd_map
+
 unload:
 	sudo bash ./unload.sh
 
