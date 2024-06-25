@@ -1,7 +1,9 @@
-default: build load
+default: clean build load
 
 BPF_PROG = kernel-cwnd.bpf.c
 BUILD_NAME = bpf_sockops
+VAL ?= 00
+MAP ?= CwndMap
 
 build: $(BPF_PROG) vmlinux.h clean
 	mkdir -p build
@@ -21,11 +23,11 @@ load:
 trace:
 	sudo cat /sys/kernel/debug/tracing/trace_pipe
 
-client:
-	sudo bpftool map update name CwndMap key hex 00 00 00 00 value hex 07 00 00 00
+map.update: 
+	sudo bpftool map update name $(MAP) key hex 00 00 00 00 value hex 00 00 00 $(VAL)
 
-mapdump:
-	sudo bpftool map dump name CwndMap
+map.dump:
+	sudo bpftool map dump name $(MAP)
 
 unload:
 	sudo bash ./unload.sh
