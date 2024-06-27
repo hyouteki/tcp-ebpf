@@ -4,12 +4,9 @@ set -xe
 BUILD_NAME=bpf_sockops
 
 sudo mount -t bpf bpf /sys/fs/bpf/
+sudo mkdir -p /sys/fs/cgroup/unified/${CGROUP_NAME}
 
-if [ -e "/sys/fs/bpf/bpf_sockops" ]; then
-    echo "info: "${BUILD_NAME}" already loaded"
-    ./unload.sh
-    echo "info: old "${BUILD_NAME}" build unloaded"
-fi
+./unload.sh
 
 sudo bpftool prog load ./build/${BUILD_NAME}.o /sys/fs/bpf/${BUILD_NAME} type sockops pinmaps /sys/fs/bpf/
-sudo bpftool cgroup attach /sys/fs/cgroup/ sock_ops pinned /sys/fs/bpf/${BUILD_NAME}
+sudo bpftool cgroup attach /sys/fs/cgroup/unified/${BUILD_NAME} sock_ops pinned /sys/fs/bpf/${BUILD_NAME}
