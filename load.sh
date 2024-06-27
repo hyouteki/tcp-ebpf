@@ -4,7 +4,7 @@ set -xe
 BUILD_NAME=bpf_sockops
 
 sudo mount -t bpf bpf /sys/fs/bpf/
-sudo mkdir -p /sys/fs/cgroup/unified/${CGROUP_NAME}
+sudo mkdir -p /sys/fs/cgroup/unified/${BUILD_NAME}
 
 ./unload.sh
 
