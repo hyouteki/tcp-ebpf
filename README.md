@@ -7,7 +7,7 @@ An eBPF program to modify the congestion window only if the fallback is set; sto
   <image src="https://github.com/hyouteki/tcp-ebpf/assets/108230497/df596c59-1567-4ba1-9422-50e9256f89ab" width="1000">
 - `make trace`: for dumping the trace_pipe onto stdout.<br><br>
   <image src="https://github.com/hyouteki/tcp-ebpf/assets/108230497/760b4ca6-8743-4576-b520-47155e3c6128" width="1000">
-- `make client`: dummy client for testing the loaded program instead of any user space program.
+- `make map.update MAP=CwndMap VAL=00`: dummy client for testing the loaded program instead of any user space program.
 - `make map.dump MAP=CwndMap`: dump the contents of `CwndMap` onto the stdout.
 - `make unload`: for detaching the hooks and unloading the program.
 > [!Important]
